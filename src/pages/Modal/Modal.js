@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import style from "./modal.module.css";
 import ModalConfirm from "../ModalConfirm/ModalConfirm";
+import ModalSuccess from "../ModalSucess/ModalSucess";
 
 const Modal = ({ isOpen, onRequestClose }) => {
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [cursos, setCursos] = useState([]);
   const [disciplinas, setDisciplinas] = useState([]);
   const [professores, setProfessores] = useState([]);
@@ -261,7 +263,7 @@ const Modal = ({ isOpen, onRequestClose }) => {
   }, []);
 
   const openConfirmationModal = () => {
-    setShowConfirmationModal(true);
+    setShowSuccessModal(true);
   };
 
   const closeConfirmationModal = () => {
@@ -269,7 +271,7 @@ const Modal = ({ isOpen, onRequestClose }) => {
   };
 
   const handleAdd = () => {
-    closeConfirmationModal();
+    setShowSuccessModal(true);
   };
 
   const shouldShowModal = true;
@@ -284,25 +286,16 @@ const Modal = ({ isOpen, onRequestClose }) => {
     setSalasDisponiveis(salasDisponiveis);
   };
 
-  if (showConfirmationModal) {
+  if (showSuccessModal) {
     return (
-      <div className="modal-overlay">
-        <ModalConfirm
-          onConfirm={handleAdd}
-          onCancel={closeConfirmationModal}
-          curso={cursoSelecionado}
-          disciplina={disciplinaSelecionada}
-          professor={professorSelecionado}
-          sala={salaSelecionada}
-          periodo={periodoSelecionado}
-        />
-      </div>
+      <ModalSuccess onClose={() => setShowSuccessModal(false)} />
     );
   }
 
   if (!shouldShowModal) {
     return null;
   }
+
 
   return (
     <div className={style.Container}>

@@ -1,8 +1,16 @@
-import React, { useState } from 'react';
-import style from './modal.module.css';
-import ModalSuccess from '../ModalSucess/ModalSucess';
+import React, { useState } from "react";
+import style from "./modal.module.css";
+import ModalSuccess from "../ModalSucess/ModalSucess";
 
-const ModalConfirm = ({ onConfirm, onCancel, curso, disciplina, professor, sala, periodo }) => {
+const ModalConfirm = ({
+  onConfirm,
+  onCancel,
+  curso,
+  disciplina,
+  professor,
+  sala,
+  periodo,
+}) => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleSuccessClose = () => {
@@ -20,40 +28,48 @@ const ModalConfirm = ({ onConfirm, onCancel, curso, disciplina, professor, sala,
   const handleAdd = async () => {
     try {
       const sessionToken = localStorage.getItem("session_token");
-  
+
       if (!sessionToken) {
         throw new Error("Token de sessão não encontrado.");
       }
-  
-      console.log('Enviando dados:', { courseId: curso, disciplineId: disciplina, teacherId: professor, classroomId: sala, termId: periodo });
-  
-      const response = await fetch("https://tcc-demanda-de-turmas.onrender.com/api/turma", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionToken}`,
-        },
-        body: JSON.stringify({
-          courseId: curso, 
-          disciplineId: disciplina, 
-          teacherId: professor, 
-          classroomId: sala,
-          termId: periodo
-        }),
+
+      console.log("Enviando dados:", {
+        courseId: curso,
+        disciplineId: disciplina,
+        teacherId: professor,
+        classroomId: sala,
+        termId: periodo,
       });
-  
-      console.log('Resposta do servidor:', response);
-  
+
+      const response = await fetch(
+        "https://tcc-demanda-de-turmas.onrender.com/api/turma",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionToken}`,
+          },
+          body: JSON.stringify({
+            courseId: curso,
+            disciplineId: disciplina,
+            teacherId: professor,
+            classroomId: sala,
+            termId: periodo,
+          }),
+        }
+      );
+
+      console.log("Resposta do servidor:", response);
+
       if (!response.ok) {
         throw new Error(`Falha ao adicionar turma: ${response.status}`);
       }
-  
+
       openSuccessModal();
     } catch (error) {
       console.error("Erro ao enviar requisição:", error);
     }
   };
-  
 
   if (showSuccessModal) {
     return (

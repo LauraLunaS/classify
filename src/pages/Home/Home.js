@@ -20,7 +20,6 @@ export default function Home() {
   };
 
   useEffect(() => {
-
     const fetchCursos = async () => {
       try {
         const sessionToken = localStorage.getItem("session_token");
@@ -37,9 +36,12 @@ export default function Home() {
         if (responseCursos.ok) {
           const dataCursos = await responseCursos.json();
           setCursos(dataCursos);
-          console.log(dataCursos)
+          console.log(dataCursos);
         } else {
-          console.error("Falha ao obter dados dos cursos:", responseCursos.status);
+          console.error(
+            "Falha ao obter dados dos cursos:",
+            responseCursos.status
+          );
         }
       } catch (error) {
         console.error("Erro ao obter dados dos cursos:", error);
@@ -47,7 +49,7 @@ export default function Home() {
     };
 
     fetchCursos();
-  }, []); 
+  }, []);
 
   const handleCursoClick = () => {
     window.location.href = "/solicitation";
@@ -74,18 +76,20 @@ export default function Home() {
         <button className={style.BtnOut}>Outros</button>
       </div>
 
-
       <div className={style.content}>
         <h4>Cursos</h4>
-          <div className={style.ContainerCurso}>
-              {cursos.map((curso) => (
-                <>
-                  <li key={curso.id} className={style.curso} onClick={handleCursoClick}>{curso.name}</li>
-                </>
-              ))}
-          </div>
+        <div className={style.ContainerCurso}>
+          {cursos.map((curso) => (
+            <li
+              key={curso.id}
+              className={style.curso}
+              onClick={handleCursoClick}
+            >
+              {curso.name}
+            </li>
+          ))}
         </div>
+      </div>
     </div>
   );
 }
-

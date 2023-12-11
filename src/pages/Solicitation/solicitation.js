@@ -7,15 +7,12 @@ import Modal from "../Modal/Modal";
 export default function Home() {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [turmas, setTurmas] = useState([]);
-  const [cursos, setCursos] = useState([]);
-  const [disciplinas, setDisciplinas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-
   const openModal = () => {
     setModalIsOpen(true);
-   };
+  };
 
   const closeModal = () => {
     setModalIsOpen(false);
@@ -23,6 +20,72 @@ export default function Home() {
 
   useEffect(() => {
     const fetchTurmas = async () => {
+      const fetchCurso = async (courseId) => {
+        try {
+          const sessionToken = localStorage.getItem("session_token");
+
+          const responseCurso = await fetch(
+            `https://tcc-demanda-de-turmas.onrender.com/api/curso/${courseId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${sessionToken}`,
+              },
+            }
+          );
+
+          if (responseCurso.ok) {
+            return await responseCurso.json();
+          } else {
+            console.error(
+              "Falha ao obter dados dos cursos:",
+              responseCurso.status
+            );
+
+            return {
+              name: "Nome do Curso Desconhecido",
+            };
+          }
+        } catch (error) {
+          console.error("Erro ao obter dados dos cursos:", error);
+          return {
+            name: "Nome do Curso Desconhecido",
+          };
+        }
+      };
+
+      const fetchDisciplina = async (disciplineId) => {
+        try {
+          const sessionToken = localStorage.getItem("session_token");
+
+          const responseDisciplina = await fetch(
+            `https://tcc-demanda-de-turmas.onrender.com/api/disciplina/${disciplineId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${sessionToken}`,
+              },
+            }
+          );
+
+          if (responseDisciplina.ok) {
+            return await responseDisciplina.json();
+          } else {
+            console.error(
+              "Falha ao obter dados das disciplinas:",
+              responseDisciplina.status
+            );
+
+            return {
+              name: "Nome da Disciplina Desconhecido",
+            };
+          }
+        } catch (error) {
+          console.error("Erro ao obter dados das disciplinas:", error);
+          return {
+            name: "Nome da Disciplina Desconhecido",
+          };
+        }
+      };
+
       try {
         const sessionToken = localStorage.getItem("session_token");
 
@@ -43,73 +106,79 @@ export default function Home() {
 
         if (responseTurmas.ok) {
           const dataTurmas = await responseTurmas.json();
-          setTurmas(dataTurmas);
-          console.log(dataTurmas);
+
+          const dataTurmaPromise = dataTurmas.map(async (turma) => {
+            const [curso, disciplina] = await Promise.all([
+              fetchCurso(turma.courseId),
+              fetchDisciplina(turma.disciplineId),
+            ]);
+
+            return {
+              turma,
+              curso,
+              disciplina,
+            };
+          });
+
+          const dataTurma = await Promise.all(dataTurmaPromise);
+
+          setTurmas(dataTurma);
+          console.log(dataTurma);
         } else {
-          console.error("Falha ao obter dados das turmas:", responseTurmas.status);
-          setError("Falha ao obter dados das turmas. Por favor, tente novamente.");
+          console.error(
+            "Falha ao obter dados das turmas:",
+            responseTurmas.status
+          );
+          setError(
+            "Falha ao obter dados das turmas. Por favor, tente novamente."
+          );
         }
       } catch (error) {
         console.error("Erro ao obter dados das turmas:", error);
-        setError("Falha ao obter dados das turmas. Por favor, tente novamente.");
-      }
-    };
-
-    const fetchCursos = async () => {
-      try {
-        const sessionToken = localStorage.getItem("session_token");
-
-        const responseCursos = await fetch(
-          "https://tcc-demanda-de-turmas.onrender.com/api/curso",
-          {
-            headers: {
-              Authorization: `Bearer ${sessionToken}`,
-            },
-          }
+        setError(
+          "Falha ao obter dados das turmas. Por favor, tente novamente."
         );
-
-        if (responseCursos.ok) {
-          const dataCursos = await responseCursos.json();
-          setCursos(dataCursos);
-          console.log(dataCursos)
-        } else {
-          console.error("Falha ao obter dados dos cursos:", responseCursos.status);
-        }
-      } catch (error) {
-        console.error("Erro ao obter dados dos cursos:", error);
-      }
-    };
-
-    const fetchDisciplinas = async () => {
-      try {
-        const sessionToken = localStorage.getItem("session_token");
-
-        const responseDisciplinas = await fetch(
-          "https://tcc-demanda-de-turmas.onrender.com/api/disciplina",
-          {
-            headers: {
-              Authorization: `Bearer ${sessionToken}`,
-            },
-          }
-        );
-
-        if (responseDisciplinas.ok) {
-          const dataDisciplinas = await responseDisciplinas.json();
-          setDisciplinas(dataDisciplinas);
-          console.log(dataDisciplinas)
-        } else {
-          console.error("Falha ao obter dados das disciplinas:", responseDisciplinas.status);
-        }
-      } catch (error) {
-        console.error("Erro ao obter dados das disciplinas:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchTurmas();
-    fetchCursos();
-    fetchDisciplinas();
-  }, []); 
-  
+  }, []);
+
+  const handleExcluir = async (classId) => {
+    try {
+      const sessionToken = localStorage.getItem("session_token");
+
+      if (!sessionToken) {
+        setError("Token de sessão não encontrado.");
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch(
+        `https://tcc-demanda-de-turmas.onrender.com/api/turma/${classId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${sessionToken}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        setTurmas((prevTurmas) =>
+          prevTurmas.filter((turma) => turma.turma.id !== classId)
+        );
+      } else {
+        console.error("Falha ao excluir a turma:", response.status);
+        setError("Falha ao excluir a turma. Por favor, tente novamente.");
+      }
+    } catch (error) {
+      console.error("Erro excluir a turma:", error);
+      setError("Falha excluir a turma. Por favor, tente novamente.");
+    }
+  };
 
   return (
     <div className={style.background}>
@@ -136,37 +205,37 @@ export default function Home() {
         <h2 className={style.h2}>Solicitações</h2>
         <div>
           <input type="text" className={style.Input}></input>
-          <button className={style.BtnAdd} onClick={openModal}>Adicionar</button>
+          <button className={style.BtnAdd} onClick={openModal}>
+            Adicionar
+          </button>
         </div>
-          {modalIsOpen && (
-            <div>
-              <Modal onRequestClose={closeModal} />
-            </div>
-          )}
+        {modalIsOpen && (
+          <div>
+            <Modal onRequestClose={closeModal} />
+          </div>
+        )}
       </section>
 
-      {turmas.map((turma, index) => {
-        const curso = cursos.find((c) => c.id === turma.courseId);
-        const disciplina = disciplinas.find((d) => d.id === turma.disciplineId);
-
-        return (
-          <div key={index} className={style.Info}>
-            <div className={style.Box}>
-              <p className={style.Sip}>SI</p>
-            </div>
-            <div className={style.info}>
-              <h5 className={style.hinfo}>
-                {curso ? curso.name : "Nome do Curso Desconhecido"} -{" "}
-                {disciplina ? disciplina.name : "Nome da Disciplina Desconhecido"}
-              </h5>
-              <div>
-                <button className={style.btn}>Excluir</button>
-                <button>Editar</button>
-              </div>
+      {turmas.map(({ turma, curso, disciplina }) => (
+        <div key={turma.id} className={style.Info}>
+          <div className={style.Box}>
+            <p className={style.Sip}>SI</p>
+          </div>
+          <div className={style.info}>
+            <h5 className={style.hinfo}>
+              {curso.name} - {disciplina.name}
+            </h5>
+            <div>
+              <button
+                onClick={() => handleExcluir(turma.id)}
+                className={style.btn}
+              >
+                Excluir
+              </button>
             </div>
           </div>
-        );
-      })}
+        </div>
+      ))}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import style from "./modal.module.css";
 import ModalSuccess from "../ModalSucess/ModalSucess";
 
@@ -12,6 +12,95 @@ const ModalConfirm = ({
   periodo,
 }) => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [cursoName, setCursoName] = useState("");
+  const [disciplinaName, setDisciplinaName] = useState("");
+  const [professorName, setProfessorName] = useState("");
+  const [salaName, setSalaName] = useState("");
+  const [periodoName, setPeriodoName] = useState("");
+
+  useEffect(() => {
+    const fetchDetails = async () => {
+      try {
+        const sessionToken = localStorage.getItem("session_token");
+
+        if (!sessionToken) {
+          throw new Error("Token de sessão não encontrado.");
+        }
+
+        // Adapte as URLs conforme necessário
+        const cursoResponse = await fetch(
+          `https://tcc-demanda-de-turmas.onrender.com/api/curso/${curso}`,
+          {
+            headers: {
+              Authorization: `Bearer ${sessionToken}`,
+            },
+          }
+        );
+
+        const disciplinaResponse = await fetch(
+          `https://tcc-demanda-de-turmas.onrender.com/api/disciplina/${disciplina}`,
+          {
+            headers: {
+              Authorization: `Bearer ${sessionToken}`,
+            },
+          }
+        );
+
+        const professorResponse = await fetch(
+          `https://tcc-demanda-de-turmas.onrender.com/api/professor/${professor}`,
+          {
+            headers: {
+              Authorization: `Bearer ${sessionToken}`,
+            },
+          }
+        );
+
+        const salaResponse = await fetch(
+          `https://tcc-demanda-de-turmas.onrender.com/api/sala/${sala}`,
+          {
+            headers: {
+              Authorization: `Bearer ${sessionToken}`,
+            },
+          }
+        );
+
+        const periodoResponse = await fetch(
+          `https://tcc-demanda-de-turmas.onrender.com/api/periodo/${periodo}`,
+          {
+            headers: {
+              Authorization: `Bearer ${sessionToken}`,
+            },
+          }
+        );
+
+        if (
+          !cursoResponse.ok ||
+          !disciplinaResponse.ok ||
+          !professorResponse.ok ||
+          !salaResponse.ok ||
+          !periodoResponse.ok
+        ) {
+          throw new Error("Falha ao obter detalhes");
+        }
+
+        const cursoData = await cursoResponse.json();
+        const disciplinaData = await disciplinaResponse.json();
+        const professorData = await professorResponse.json();
+        const salaData = await salaResponse.json();
+        const periodoData = await periodoResponse.json();
+
+        setCursoName(cursoData.name);
+        setDisciplinaName(disciplinaData.name);
+        setProfessorName(professorData.name);
+        setSalaName(salaData.name);
+        setPeriodoName(periodoData.name);
+      } catch (error) {
+        console.error("Erro ao obter detalhes:", error);
+      }
+    };
+
+    fetchDetails();
+  }, [curso, disciplina, professor, sala, periodo]);
 
   const handleSuccessClose = () => {
     setShowSuccessModal(false);
@@ -86,11 +175,11 @@ const ModalConfirm = ({
       </button>
       <h2 className={style.title}>Confirmação</h2>
       <p className={style.subtitle}>Deseja realmente adicionar?</p>
-      <p className={style.p}>Curso: {curso}</p>
-      <p className={style.p}>Disciplina: {disciplina}</p>
-      <p className={style.p}>Professor: {professor}</p>
-      <p className={style.p}>Sala: {sala}</p>
-      <p className={style.p}>Período: {periodo}</p>
+      <p className={style.p}>Curso: {cursoName}</p>
+      <p className={style.p}>Disciplina: {disciplinaName}</p>
+      <p className={style.p}>Professor: {professorName}</p>
+      <p className={style.p}>Sala: {salaName}</p>
+      <p className={style.p}>Período: {periodoName}</p>
       <button onClick={handleAdd} className={style.btnAdd}>
         Sim
       </button>
